@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlissPay - Send Money Instantly</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #26c6da; /* BlissPay Teal */
+            --secondary-color: #0097a7;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
+        }
+        /* CSS unchanged except color variable for branding */
+        /* ... All your previous CSS ... */
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-money-bill-transfer"></i>
+                    <span>BlissPay</span>
+                </div>
+                <nav id="main-nav">
+                    <ul>
+                        <li><a href="#" class="nav-link" data-section="home">Home</a></li>
+                        <li><a href="#" class="nav-link" data-section="dashboard">Dashboard</a></li>
+                        <li><a href="#" class="nav-link" data-section="send">Send Money</a></li>
+                        <li><a href="#" class="nav-link" data-section="request">Request Money</a></li>
+                        <li><a href="#" class="nav-link" data-section="split">Split Bill</a></li>
+                    </ul>
+                </nav>
+                <div class="auth-buttons" id="auth-buttons">
+                    <button class="btn btn-outline" id="login-btn">Log In</button>
+                    <button class="btn btn-primary" id="signup-btn">Sign Up</button>
+                </div>
+                <div id="user-menu" style="display: none;">
+                    <button class="btn btn-outline" id="logout-btn">Log Out</button>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- All other sections: home, login, signup, verify, dashboard, send, preview, success, request, split, footer -->
+    <!-- Keep your original HTML structure, change "Zelle" to "BlissPay" everywhere -->
+    <!-- ... Your previous HTML content ... -->
+
+    <!-- EmailJS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"></script>
+    <script>
+        // Initialize EmailJS
+        (function() {
+            emailjs.init("CWwoKC5KRiUHd4Tix_obC9uAGg7PF66MIlWerMc");
+        })();
+
+        // --- Helper: Generate 6-digit code ---
+        function generateCode() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        // --- EmailJS sending functions ---
+        // Send Verification Email
+        function sendVerificationEmail(email, code) {
+            emailjs.send("__ejs-test-mail-service__", "email_XmT2ZfELDgtHkaLTYC903P57", {
+                to_email: email,
+                verification_code: code
+            }).then(function(response) {
+                console.log("Verification email sent", response);
+            }, function(error) {
+                console.error("Error sending verification email", error);
+            });
+        }
+
+        // Send Payment Receipt Email
+        function sendPaymentReceiptEmail(email, amount, recipient, txid) {
+            emailjs.send("__ejs-test-mail-service__", "email_XmT2ZfELDgtHkaLTYC903P57", {
+                to_email: email,
+                amount: amount,
+                recipient: recipient,
+                transaction_id: txid
+            }).then(function(response) {
+                console.log("Receipt email sent", response);
+            }, function(error) {
+                console.error("Error sending receipt email", error);
+            });
+        }
+
+        //------------------------------
+        // BlissPay App Logic (main JS)
+        //------------------------------
+
+        // Same app state and setup as your original code, with branding updated to BlissPay
+        const state = {
+            currentUser: null,
+            users: [
+                { id: 1, email: 'demo@example.com', name: 'Demo User', phone: '(555) 123-4567', password: 'password123', verified: true, balance: 2458.75 }
+            ],
+            transactions: [
+                { id: 1, type: 'received', name: 'John Smith', email: 'john@example.com', date: 'Today, 10:23 AM', amount: 125.00 },
+                { id: 2, type: 'sent', name: 'Electricity Bill', email: 'power@example.com', date: 'Yesterday, 2:45 PM', amount: 85.50 },
+                { id: 3, type: 'received', name: 'Sarah Johnson', email: 'sarah@example.com', date: 'Oct 12, 9:15 AM', amount: 50.00 },
+                { id: 4, type: 'sent', name: 'Netflix Subscription', email: 'netflix@example.com', date: 'Oct 10, 6:30 PM', amount: 15.99 }
+            ],
+            verificationCode: '123456', // Default code for demo, will be overwritten
+            contacts: [
+                { name: 'John Smith', value: 'john@example.com' },
+                { name: 'Sarah Johnson', value: 'sarah@example.com' },
+                { name: 'Mike Williams', value: 'mike@example.com' },
+                { name: 'Lisa Brown', value: '555-123-4567' }
+            ]
+        };
+
+        // DOM Elements setup (same as your code)
+        // ... [all your DOM and UI logic here] ...
+
+        // Signup with Email Verification
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const phone = document.getElementById('signup-phone').value;
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('signup-confirm-password').value;
+
+            // [Validation checks here...]
+
+            // Check if user already exists
+            if (state.users.some(u => u.email === email)) {
+                showAlert(signupAlert, 'An account with this email already exists.', 'danger');
+                return;
+            }
+
+            // Generate and store verification code
+            const verificationCode = generateCode();
+            state.verificationCode = verificationCode;
+
+            // Create new user (unverified)
+            const newUser = {
+                id: state.users.length + 1,
+                email,
+                name,
+                phone,
+                password,
+                verified: false,
+                balance: 0
+            };
+            state.users.push(newUser);
+
+            verifyEmail.textContent = email;
+            showSection('verify');
+            signupForm.reset();
+
+            showAlert(verifyAlert, 'Verification code has been sent to your email.', 'info');
+
+            // Send verification email
+            sendVerificationEmail(email, verificationCode);
+        });
+
+        // Payment with Email Receipt
+        confirmSendBtn.addEventListener('click', () => {
+            const recipient = document.getElementById('recipient-email').value;
+            const amount = parseFloat(document.getElementById('send-amount').value);
+            const note = document.getElementById('send-note').value;
+
+            state.currentUser.balance -= amount;
+            const recipientName = recipient.includes('@') ? recipient.split('@')[0] : `User with phone ${recipient}`;
+            const txid = 'TX-' + Math.floor(100000000 + Math.random() * 900000000);
+
+            const newTransaction = {
+                id: state.transactions.length + 1,
+                type: 'sent',
+                name: recipientName,
+                email: recipient,
+                date: 'Just now',
+                amount: amount
+            };
+            state.transactions.unshift(newTransaction);
+
+            // Show success screen
+            document.getElementById('success-recipient').textContent = recipient;
+            document.getElementById('success-amount').textContent = `$${amount.toFixed(2)}`;
+            document.getElementById('success-txid').textContent = txid;
+            document.getElementById('success-status').textContent = 'Completed';
+            showSection('success');
+            updateDashboard();
+
+            // Send payment receipt email
+            sendPaymentReceiptEmail(state.currentUser.email, `$${amount.toFixed(2)}`, recipient, txid);
+        });
+
+        // ...rest of your code unchanged...
+
+        // Demo account info
+        console.log('Demo Account: demo@example.com / password123');
+    </script>
+</body>
+</html>
